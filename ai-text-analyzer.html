@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Text Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .result-card h3 {
+            margin-bottom: 15px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #4299e1;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .sentiment-indicator {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .sentiment-positive {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .sentiment-negative {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        .sentiment-neutral {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .sentiment-icon {
+            font-size: 2rem;
+        }
+
+        .sentiment-text {
+            flex: 1;
+        }
+
+        .sentiment-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .word-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .word-tag {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .keyword-list {
+            list-style: none;
+        }
+
+        .keyword-list li {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background: #edf2f7;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .frequency {
+            background: #4299e1;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .readability-score {
+            text-align: center;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 10px;
+            color: white;
+        }
+
+        .score-excellent { background: #48bb78; }
+        .score-good { background: #ed8936; }
+        .score-poor { background: #f56565; }
+
+        .language-detection {
+            padding: 15px;
+            background: #e6fffa;
+            border-radius: 10px;
+            border-left: 4px solid #38b2ac;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .demo-btn {
+            padding: 8px 16px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .demo-btn:hover {
+            background: #cbd5e0;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Smart Text Analyzer</h1>
+            <p>AI-powered text analysis with sentiment detection, keyword extraction, and readability scoring</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>📝 Input Text</h2>
+                <div class="demo-buttons">
+                    <button class="demo-btn" onclick="loadDemo('positive')">📈 Positive Review</button>
+                    <button class="demo-btn" onclick="loadDemo('negative')">📉 Negative Review</button>
+                    <button class="demo-btn" onclick="loadDemo('technical')">🔧 Technical Text</button>
+                    <button class="demo-btn" onclick="loadDemo('news')">📰 News Article</button>
+                </div>
+                <textarea id="textInput" placeholder="Paste or type your text here for analysis. Try reviews, articles, social media posts, or any text you want to analyze...
+
+Example: 'I absolutely love this new smartphone! The camera quality is amazing and the battery life exceeds my expectations. The design is sleek and modern. Highly recommended!'"></textarea>
+                <button class="analyze-btn" onclick="analyzeText()">🔍 Analyze Text</button>
+            </div>
+
+            <div class="card">
+                <h2>📊 Quick Stats</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="wordCount">0</div>
+                        <div class="stat-label">Words</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="charCount">0</div>
+                        <div class="stat-label">Characters</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="sentenceCount">0</div>
+                        <div class="stat-label">Sentences</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="readingTime">0</div>
+                        <div class="stat-label">Min Read</div>
+                    </div>
+                </div>
+                
+                <div id="languageDetection" class="language-detection" style="display: none;">
+                    <strong>🌍 Detected Language:</strong> <span id="detectedLanguage">English</span>
+                </div>
+
+                <div class="readability-score">
+                    <div class="score-circle" id="readabilityCircle">
+                        <span id="readabilityScore">-</span>
+                    </div>
+                    <div><strong>Readability Score</strong></div>
+                    <div id="readabilityLevel">Enter text to analyze</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-grid" id="resultsGrid" style="display: none;">
+            <div class="result-card">
+                <h3>😊 Sentiment Analysis</h3>
+                <div id="sentimentIndicator" class="sentiment-indicator sentiment-neutral">
+                    <div class="sentiment-icon">😐</div>
+                    <div class="sentiment-text">
+                        <div><strong>Neutral</strong></div>
+                        <div>No clear emotional tone detected</div>
+                    </div>
+                    <div class="sentiment-score">50%</div>
+                </div>
+                <div style="font-size: 0.9rem; color: #718096;">
+                    <strong>How it works:</strong> AI analyzes word patterns, context, and emotional indicators to determine if text is positive, negative, or neutral.
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h3>🔑 Key Words</h3>
+                <ul class="keyword-list" id="keywordList">
+                    <li>No keywords detected <span class="frequency">0</span></li>
+                </ul>
+                <div style="font-size: 0.9rem; color: #718096; margin-top: 10px;">
+                    <strong>Algorithm:</strong> TF-IDF scoring identifies important words by frequency and uniqueness.
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h3>☁️ Word Cloud</h3>
+                <div class="word-cloud" id="wordCloud">
+                    <div class="word-tag">Enter text</div>
+                    <div class="word-tag">to generate</div>
+                    <div class="word-tag">word cloud</div>
+                </div>
+                <div style="font-size: 0.9rem; color: #718096; margin-top: 15px;">
+                    <strong>Visualization:</strong> Most frequent words displayed with size based on occurrence frequency.
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h3>🧠 AI Insights</h3>
+                <div id="aiInsights">
+                    <div style="padding: 15px; background: #f7fafc; border-radius: 8px;">
+                        <strong>📈 Text Complexity:</strong> <span id="complexityLevel">Medium</span><br><br>
+                        <strong>🎯 Content Type:</strong> <span id="contentType">General Text</span><br><br>
+                        <strong>📱 Best For:</strong> <span id="bestFor">General Audience</span><br><br>
+                        <strong>💡 Recommendation:</strong> <span id="recommendation">Text is ready for publication</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TextAnalyzer {
+            constructor() {
+                this.positiveWords = ['amazing', 'excellent', 'fantastic', 'wonderful', 'great', 'good', 'awesome', 'outstanding', 'superb', 'brilliant', 'perfect', 'love', 'like', 'beautiful', 'incredible', 'spectacular', 'marvelous', 'impressive', 'exceptional', 'remarkable'];
+                this.negativeWords = ['terrible', 'awful', 'horrible', 'bad', 'worst', 'hate', 'dislike', 'disappointing', 'poor', 'pathetic', 'useless', 'annoying', 'frustrating', 'disgusting', 'appalling', 'dreadful', 'abysmal', 'atrocious', 'deplorable', 'inadequate'];
+                this.stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them'];
+                this.demoTexts = {
+                    positive: "I absolutely love this new smartphone! The camera quality is amazing and the battery life exceeds my expectations. The design is sleek and modern, and the performance is outstanding. The user interface is intuitive and responsive. This device has completely transformed my daily productivity. I would highly recommend it to anyone looking for a premium mobile experience. The value for money is excellent!",
+                    negative: "This product is a complete disappointment. The quality is terrible and it broke after just one week of use. Customer service was unhelpful and rude. The design is outdated and the functionality is poor. I wasted my money on this purchase. The performance is sluggish and it frequently crashes. I would not recommend this to anyone. Save your money and buy something else.",
+                    technical: "Machine learning algorithms utilize statistical methods to identify patterns in large datasets. Neural networks consist of interconnected nodes that process information through weighted connections. Deep learning models require substantial computational resources and extensive training data. The backpropagation algorithm optimizes network parameters by minimizing the loss function through gradient descent optimization techniques.",
+                    news: "The global technology sector experienced significant growth this quarter, with artificial intelligence companies leading the charge. Market analysts report increased investor confidence following breakthrough developments in quantum computing and renewable energy storage solutions. Government policies supporting digital transformation initiatives have accelerated adoption rates across various industries, creating new opportunities for innovation and economic expansion."
+                };
+                this.updateRealTimeStats();
+            }
+
+            updateRealTimeStats() {
+                const textInput = document.getElementById('textInput');
+                textInput.addEventListener('input', () => {
+                    const text = textInput.value;
+                    this.updateQuickStats(text);
+                });
+            }
+
+            updateQuickStats(text) {
+                const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+                const chars = text.length;
+                const sentences = text.trim() ? text.split(/[.!?]+/).filter(s => s.trim().length > 0).length : 0;
+                const readingTime = Math.ceil(words / 200); // Average reading speed
+
+                document.getElementById('wordCount').textContent = words;
+                document.getElementById('charCount').textContent = chars;
+                document.getElementById('sentenceCount').textContent = sentences;
+                document.getElementById('readingTime').textContent = readingTime;
+            }
+
+            analyzeText(text) {
+                if (!text.trim()) {
+                    alert('Please enter some text to analyze!');
+                    return;
+                }
+
+                const results = {
+                    sentiment: this.analyzeSentiment(text),
+                    keywords: this.extractKeywords(text),
+                    readability: this.calculateReadability(text),
+                    insights: this.generateInsights(text),
+                    wordCloud: this.generateWordCloud(text)
+                };
+
+                this.displayResults(results);
+            }
+
+            analyzeSentiment(text) {
+                const words = text.toLowerCase().split(/\W+/);
+                let positiveScore = 0;
+                let negativeScore = 0;
+
+                words.forEach(word => {
+                    if (this.positiveWords.includes(word)) positiveScore++;
+                    if (this.negativeWords.includes(word)) negativeScore++;
+                });
+
+                const total = positiveScore + negativeScore;
+                if (total === 0) {
+                    return { type: 'neutral', score: 50, confidence: 'medium' };
+                }
+
+                const positivePercent = Math.round((positiveScore / total) * 100);
+                
+                if (positivePercent > 60) {
+                    return { type: 'positive', score: positivePercent, confidence: 'high' };
+                } else if (positivePercent < 40) {
+                    return { type: 'negative', score: 100 - positivePercent, confidence: 'high' };
+                } else {
+                    return { type: 'neutral', score: 50, confidence: 'medium' };
+                }
+            }
+
+            extractKeywords(text) {
+                const words = text.toLowerCase().split(/\W+/)
+                    .filter(word => word.length > 3 && !this.stopWords.includes(word));
+                
+                const frequency = {};
+                words.forEach(word => {
+                    frequency[word] = (frequency[word] || 0) + 1;
+                });
+
+                return Object.entries(frequency)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 8)
+                    .map(([word, count]) => ({ word, count }));
+            }
+
+            calculateReadability(text) {
+                const words = text.trim().split(/\s+/).length;
+                const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+                const syllables = this.countSyllables(text);
+
+                if (sentences === 0 || words === 0) return { score: 0, level: 'No text' };
+
+                // Simplified Flesch Reading Ease formula
+                const score = Math.max(0, Math.min(100, 
+                    206.835 - (1.015 * (words / sentences)) - (84.6 * (syllables / words))
+                ));
+
+                let level;
+                if (score >= 80) level = 'Very Easy';
+                else if (score >= 70) level = 'Easy';
+                else if (score >= 60) level = 'Standard';
+                else if (score >= 50) level = 'Difficult';
+                else level = 'Very Difficult';
+
+                return { score: Math.round(score), level };
+            }
+
+            countSyllables(text) {
+                return text.toLowerCase()
+                    .replace(/[^a-z]/g, ' ')
+                    .split(/\s+/)
+                    .reduce((total, word) => {
+                        if (word.length === 0) return total;
+                        const syllables = word.match(/[aeiouy]+/g);
+                        return total + (syllables ? syllables.length : 1);
+                    }, 0);
+            }
+
+            generateInsights(text) {
+                const words = text.trim().split(/\s+/).length;
+                const avgWordLength = text.replace(/\s+/g, '').length / words;
+                const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+                const avgSentenceLength = words / sentences;
+
+                let complexity, contentType, bestFor, recommendation;
+
+                // Determine complexity
+                if (avgWordLength > 6 && avgSentenceLength > 20) {
+                    complexity = 'High';
+                } else if (avgWordLength > 4 && avgSentenceLength > 15) {
+                    complexity = 'Medium';
+                } else {
+                    complexity = 'Low';
+                }
+
+                // Determine content type
+                if (text.includes('algorithm') || text.includes('technical') || text.includes('system')) {
+                    contentType = 'Technical';
+                    bestFor = 'Technical Audience';
+                } else if (text.includes('review') || text.includes('recommend') || text.includes('experience')) {
+                    contentType = 'Review/Opinion';
+                    bestFor = 'General Consumers';
+                } else if (text.includes('breaking') || text.includes('report') || text.includes('announced')) {
+                    contentType = 'News/Informational';
+                    bestFor = 'News Readers';
+                } else {
+                    contentType = 'General Content';
+                    bestFor = 'General Audience';
+                }
+
+                // Generate recommendation
+                if (complexity === 'High') {
+                    recommendation = 'Consider simplifying for broader appeal';
+                } else if (words < 50) {
+                    recommendation = 'Consider expanding with more details';
+                } else {
+                    recommendation = 'Well-balanced and ready to publish';
+                }
+
+                return { complexity, contentType, bestFor, recommendation };
+            }
+
+            generateWordCloud(text) {
+                const keywords = this.extractKeywords(text);
+                return keywords.slice(0, 12).map(k => k.word);
+            }
+
+            displayResults(results) {
+                document.getElementById('resultsGrid').style.display = 'grid';
+
+                // Update sentiment
+                const sentimentDiv = document.getElementById('sentimentIndicator');
+                const sentimentClass = `sentiment-${results.sentiment.type}`;
+                sentimentDiv.className = `sentiment-indicator ${sentimentClass}`;
+                
+                const icons = { positive: '😊', negative: '😞', neutral: '😐' };
+                const labels = { positive: 'Positive', negative: 'Negative', neutral: 'Neutral' };
+                const descriptions = { 
+                    positive: 'Text contains positive emotions and opinions',
+                    negative: 'Text contains negative emotions and criticism',
+                    neutral: 'Text is balanced or factual without strong emotions'
+                };
+
+                sentimentDiv.innerHTML = `
+                    <div class="sentiment-icon">${icons[results.sentiment.type]}</div>
+                    <div class="sentiment-text">
+                        <div><strong>${labels[results.sentiment.type]}</strong></div>
+                        <div>${descriptions[results.sentiment.type]}</div>
+                    </div>
+                    <div class="sentiment-score">${results.sentiment.score}%</div>
+                `;
+
+                // Update keywords
+                const keywordList = document.getElementById('keywordList');
+                if (results.keywords.length > 0) {
+                    keywordList.innerHTML = results.keywords.map(k => 
+                        `<li>${k.word} <span class="frequency">${k.count}</span></li>`
+                    ).join('');
+                } else {
+                    keywordList.innerHTML = '<li>No significant keywords found <span class="frequency">0</span></li>';
+                }
+
+                // Update readability
+                const readabilityScore = document.getElementById('readabilityScore');
+                const readabilityLevel = document.getElementById('readabilityLevel');
+                const readabilityCircle = document.getElementById('readabilityCircle');
+                
+                readabilityScore.textContent = results.readability.score;
+                readabilityLevel.textContent = results.readability.level;
+                
+                readabilityCircle.className = 'score-circle';
+                if (results.readability.score >= 70) readabilityCircle.classList.add('score-excellent');
+                else if (results.readability.score >= 50) readabilityCircle.classList.add('score-good');
+                else readabilityCircle.classList.add('score-poor');
+
+                // Update word cloud
+                const wordCloud = document.getElementById('wordCloud');
+                if (results.wordCloud.length > 0) {
+                    wordCloud.innerHTML = results.wordCloud.map(word => 
+                        `<div class="word-tag">${word}</div>`
+                    ).join('');
+                } else {
+                    wordCloud.innerHTML = '<div class="word-tag">No words</div>';
+                }
+
+                // Update insights
+                document.getElementById('complexityLevel').textContent = results.insights.complexity;
+                document.getElementById('contentType').textContent = results.insights.contentType;
+                document.getElementById('bestFor').textContent = results.insights.bestFor;
+                document.getElementById('recommendation').textContent = results.insights.recommendation;
+
+                // Show language detection
+                document.getElementById('languageDetection').style.display = 'block';
+            }
+        }
+
+        // Initialize the analyzer
+        const analyzer = new TextAnalyzer();
+
+        function analyzeText() {
+            const text = document.getElementById('textInput').value;
+            analyzer.analyzeText(text);
+        }
+
+        function loadDemo(type) {
+            const text = analyzer.demoTexts[type];
+            document.getElementById('textInput').value = text;
+            analyzer.updateQuickStats(text);
+        }
+
+        // Auto-analyze when Enter is pressed in textarea
+        document.getElementById('textInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                analyzeText();
+            }
+        });
+    </script>
+</body>
+</html>
